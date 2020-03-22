@@ -27,6 +27,7 @@ class TMDBClient {
         case login
         case createSessionId
         case webAuth
+        case logout
         
         var stringValue: String {
             switch self {
@@ -39,7 +40,8 @@ class TMDBClient {
                 return Endpoints.base + "/authentication/session/new" + Endpoints.apiKeyParam
             case .webAuth:
                 return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviemanager:authenticate"
-
+            case .logout:
+                return Endpoints.base + "/authentication/session" + Endpoints.apiKeyParam
             }
         }
         
@@ -69,6 +71,20 @@ class TMDBClient {
                 completion(false, error)
             }
             
+        }.resume()
+    }
+    class func logout(completion: @escaping (Bool, Error?) -> Void) {
+        var request = URLRequest(url: Endpoints.logout.url)
+        request.httpMethod = "DELETE"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body = LogoutRequest(sessionID: Auth.sessionId)
+        
+        request.httpBody = try! JSONEncoder().encode(body)
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            Auth.requestToken = ""
+            Auth.sessionId = ""
+            completion(true, nil)
         }.resume()
     }
     
