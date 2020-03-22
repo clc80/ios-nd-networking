@@ -25,6 +25,8 @@ class TMDBClient {
         case getWatchlist
         case getRequestToken
         case login
+        case createSessionId
+        case webAuth
         
         var stringValue: String {
             switch self {
@@ -33,6 +35,11 @@ class TMDBClient {
                 return Endpoints.base + "/authentication/token/new" + Endpoints.apiKeyParam
             case .login:
                 return Endpoints.base + "/authentication/token/validate_with_login" + Endpoints.apiKeyParam
+            case .createSessionId:
+                return Endpoints.base + "/authentication/session/new" + Endpoints.apiKeyParam
+            case .webAuth:
+                return "https://www.themoviedb.org/authenticate/" + Auth.requestToken + "?redirect_to=themoviewmanager:authenticate"
+
             }
         }
         
@@ -98,6 +105,31 @@ class TMDBClient {
             }
         }
         task.resume()
+    }
+    
+    class func createSessionID(completion: @escaping (Bool, Error?) -> Void) {
+        var request = URLRequest(url: Endpoints.createSessionId.url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body = PostSession(requestToken: Auth.requestToken)
+        
+        request.httpBody = try! JSONEncoder().encode(body)
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard let data = data else {
+                completion(false, error)
+                return
+            }
+            do {
+               let decoder = JSONDecoder()
+                let responseObject = try decoder.decode(SessionResponse.self, from: data)
+                Auth.sessionId = responseObject.sessionID
+                completion(true, nil)
+            } catch {
+                completion(false, error)
+            }
+            
+        }.resume()
     }
     
 }

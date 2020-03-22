@@ -23,7 +23,6 @@ class LoginViewController: UIViewController {
     }
     
     @IBAction func loginTapped(_ sender: UIButton) {
-        performSegue(withIdentifier: "completeLogin", sender: nil)
         TMDBClient.getRequestToken(completion: handleRequestTokenResponse(success:error:))
     }
     
@@ -42,6 +41,19 @@ class LoginViewController: UIViewController {
     
     func handleLoginResponse(success: Bool, Error: Error?) {
         print(TMDBClient.Auth.requestToken)
+        if success {
+            TMDBClient.createSessionID(completion: handleSessionResponse(success:Error:))
+        }
+    }
+    
+    func handleSessionResponse(success: Bool, Error: Error?) {
+        print(TMDBClient.Auth.sessionId)
+        if success {
+            DispatchQueue.main.async {
+                self.performSegue(withIdentifier: "completeLogin", sender: nil)
+            }
+        }
+        
     }
     
 }
