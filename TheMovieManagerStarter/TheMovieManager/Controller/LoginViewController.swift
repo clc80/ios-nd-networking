@@ -41,22 +41,29 @@ class LoginViewController: UIViewController {
     
     func handleRequestTokenResponse(success: Bool, error: Error?) {
         if success {
-            TMDBClient.login(username: self.emailTextField.text ?? "", password: self.passwordTextField.text ?? "", completion: self.handleLoginResponse(success:Error:))
+            TMDBClient.login(username: self.emailTextField.text ?? "", password: self.passwordTextField.text ?? "", completion: self.handleLoginResponse(success:error:))
+        } else {
+            //Show the actual error that was returned
+            showLoginFailure(message: error?.localizedDescription ?? "")
         }
     }
     
-    func handleLoginResponse(success: Bool, Error: Error?) {
+    func handleLoginResponse(success: Bool, error: Error?) {
         print(TMDBClient.Auth.requestToken)
         if success {
-            TMDBClient.createSessionID(completion: handleSessionResponse(success:Error:))
+            TMDBClient.createSessionID(completion: handleSessionResponse(success:error:))
+        } else {
+            showLoginFailure(message: error?.localizedDescription ?? "")
         }
     }
     
-    func handleSessionResponse(success: Bool, Error: Error?) {
+    func handleSessionResponse(success: Bool, error: Error?) {
         setLoggingIn(false)
         print(TMDBClient.Auth.sessionId)
         if success {
             performSegue(withIdentifier: "completeLogin", sender: nil)
+        } else {
+            showLoginFailure(message: error?.localizedDescription ?? "")
         }
     }
     
@@ -71,5 +78,12 @@ class LoginViewController: UIViewController {
         loginButton.isEnabled = !loggingIn
         loginViaWebsiteButton.isEnabled = !loggingIn
     }
+    
+    func showLoginFailure(message: String) {
+        let alertVC = UIAlertController(title: "Login Failed", message: message, preferredStyle: .alert)
+        alertVC.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        show(alertVC, sender: nil)
+    }
+    
     
 }
