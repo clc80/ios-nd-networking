@@ -14,6 +14,7 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var loginButton: UIButton!
     @IBOutlet weak var loginViaWebsiteButton: UIButton!
+    @IBOutlet var activityIndicator: UIActivityIndicatorView!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -23,12 +24,14 @@ class LoginViewController: UIViewController {
     }
     
     @IBAction func loginTapped(_ sender: UIButton) {
-        TMDBClient.getRequestToken(completion: handleRequestTokenResponse(success:error:))
+        setLoggingIn(true)
+        _ = TMDBClient.getRequestToken(completion: handleRequestTokenResponse(success:error:))
         performSegue(withIdentifier: "completeLogin", sender: nil)
     }
     
     @IBAction func loginViaWebsiteTapped() {
-        TMDBClient.getRequestToken { (success, error) in
+        setLoggingIn(true)
+        _ = TMDBClient.getRequestToken { (success, error) in
             if success {
                 UIApplication.shared.open(TMDBClient.Endpoints.webAuth.url, options: [:], completionHandler: nil)
             }
@@ -50,11 +53,23 @@ class LoginViewController: UIViewController {
     }
     
     func handleSessionResponse(success: Bool, Error: Error?) {
+        setLoggingIn(false)
         print(TMDBClient.Auth.sessionId)
         if success {
             performSegue(withIdentifier: "completeLogin", sender: nil)
         }
-        
+    }
+    
+    func setLoggingIn(_ loggingIn: Bool) {
+        if loggingIn {
+            activityIndicator.startAnimating()
+        } else {
+            activityIndicator.stopAnimating()
+        }
+        emailTextField.isEnabled = !loggingIn
+        passwordTextField.isEnabled = !loggingIn
+        loginButton.isEnabled = !loggingIn
+        loginViaWebsiteButton.isEnabled = !loggingIn
     }
     
 }

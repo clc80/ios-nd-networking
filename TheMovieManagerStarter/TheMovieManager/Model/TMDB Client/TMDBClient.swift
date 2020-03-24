@@ -66,7 +66,7 @@ class TMDBClient {
     }
     
     // MARK: - GET METHODS
-    class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) {
+    @discardableResult class func getWatchlist(completion: @escaping ([Movie], Error?) -> Void) -> URLSessionTask {
         taskForGetRequest(url: Endpoints.getWatchlist.url, response: MovieResults.self) { (response, error) in
             if let response = response {
                 completion(response.results, nil)
@@ -76,7 +76,7 @@ class TMDBClient {
         }
     }
     
-    class func getRequestToken(completion: @escaping (Bool, Error?) -> Void) {
+    @discardableResult class func getRequestToken(completion: @escaping (Bool, Error?) -> Void) -> URLSessionTask {
         taskForGetRequest(url: Endpoints.getRequestToken.url, response: RequestTokenResponse.self) { (response, error) in
             if let response = response {
                 Auth.requestToken = response.requestToken
@@ -87,7 +87,7 @@ class TMDBClient {
         }
     }
     
-    class func getFavorites(completion: @escaping ([Movie], Error?) -> Void) {
+    @discardableResult class func getFavorites(completion: @escaping ([Movie], Error?) -> Void) -> URLSessionTask {
         taskForGetRequest(url: Endpoints.getFavorites.url, response: MovieResults.self) { (response, error) in
             if let response = response {
                 completion(response.results, nil)
@@ -97,14 +97,15 @@ class TMDBClient {
         }
     }
     
-    class func search(query: String, completion: @escaping ([Movie], Error?) -> Void) {
-        taskForGetRequest(url: Endpoints.search(query).url, response: MovieResults.self) { (response, error) in
+    class func search(query: String, completion: @escaping ([Movie], Error?) -> Void) -> URLSessionTask {
+        let task = taskForGetRequest(url: Endpoints.search(query).url, response: MovieResults.self) { (response, error) in
             if let response = response {
                 completion(response.results, nil)
             } else {
                 completion([], error)
             }
         }
+        return task
     }
     
     class func downloadPosterImage(posterPath: String, completion: @escaping (Data?, Error?) -> Void) {
@@ -115,7 +116,7 @@ class TMDBClient {
         }.resume()
     }
     
-    class func taskForGetRequest<ResponseType: Decodable>(url: URL, response: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) {
+    class func taskForGetRequest<ResponseType: Decodable>(url: URL, response: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionTask{
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
                 DispatchQueue.main.async {
@@ -136,6 +137,7 @@ class TMDBClient {
             }
         }
         task.resume()
+        return task
     }
     
     // MARK: - POST Requests
